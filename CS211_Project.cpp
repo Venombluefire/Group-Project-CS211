@@ -1,24 +1,52 @@
-#include <iostream>
 #include "PantryDB.h"
-
+#include <iostream>
 using namespace std;
 
 int main() {
     PantryDB db("pantry.txt");
+    int choice;
 
-    try {
-        db.addItem(new PerishableItem(1, "Milk", 10, "2025-12-20"));
-        db.addItem(new NonPerishableItem(2, "Rice", 50));
+    while (true) {
+        cout << "\n1. Add Item\n2. List Items\n3. Search Item\n4. Delete Item\n5. Update Quantity\n6. Exit\nChoice: ";
+        cin >> choice;
+        cin.ignore();
 
-        db.saveToFile();
-        cout << "Data saved successfully." << endl;
-
-        PantryDB db2("pantry.txt");
-        db2.loadFromFile();
-        db2.displayAll();
-    }
-        catch (const exception& e) {
-            cerr << e.what() << endl;
+        if (choice == 1) {
+            PantryItem item;
+            cout << "Enter Name: ";
+            getline(cin, item.name);
+            cout << "Enter Quantity: ";
+            cin >> item.quantity;
+            cin.ignore();
+            cout << "Enter Expiry (YYYY-MM-DD): ";
+            getline(cin, item.expiry);
+            db.addItem(item);
         }
-    return 0;
+        else if (choice == 2) {
+            db.listItems();
+        }
+        else if (choice == 3) {
+            string searchName;
+            cout << "Enter name to search: ";
+            getline(cin, searchName);
+            db.searchItem(searchName);
+        }
+        else if (choice == 4) {
+            string deleteName;
+            cout << "Enter name to delete: ";
+            getline(cin, deleteName);
+            db.deleteItem(deleteName);
+        }
+        else if (choice == 5) {
+            string updateName;
+            int newQty;
+            cout << "Enter name to update: ";
+            getline(cin, updateName);
+            cout << "Enter new quantity: ";
+            cin >> newQty;
+            cin.ignore();
+            db.updateQuantity(updateName, newQty);
+        }
+        else break;
+    }
 }
