@@ -5,6 +5,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 using namespace std;
 
 // PantryDB manages a collection of PantryItem objects.
@@ -27,9 +28,12 @@ public:
 
     // List all items currently in the pantry
     void listItems() const {
-        for (const auto& item : items) {
-            item.display();
+        if (items.empty()) {
+            cout << "Pantry is empty.\n";
+            return;
         }
+        for (const auto& item : items)
+            item.display();
     }
 
     // Search for an item by name and display it if found
@@ -41,7 +45,7 @@ public:
                 return;
             }
         }
-        cout << "Item not found.\n";
+        throw runtime_error("Item not found.");
     }
 
     // Delete an item by name and update the file
@@ -54,11 +58,14 @@ public:
                 return;
             }
         }
-        cout << "Item not found.\n";
+        throw runtime_error("Item not found.");
     }
 
     // Update the quantity of an existing item
     void updateQuantity(const string& itemName, int newQty) {
+        if (newQty < 0)
+            throw invalid_argument("Quantity cannot be negative.");
+        
         for (auto& item : items) {
             if (item.getName() == itemName) {
                 item.setQuantity(newQty);
@@ -67,13 +74,16 @@ public:
                 return;
             }
         }
-        cout << "Item not found.\n";
+        throw runtime_error("Item not found.");
     }
 
 private:
     // Save all pantry items to file in CSV format
     void saveToFile() {
         ofstream ofs(filename);
+        if (!ofs)
+            throw runtime_error("Failed to open file for writing.");
+
         for (const auto& item : items) {
             ofs << item.getName() << "," << item.getQuantity() << "," << item.getExpiry() << "\n";
         }
@@ -82,19 +92,27 @@ private:
     // Load pantry items from file at startup
     void loadFromFile() {
         ifstream ifs(filename);
+        if (!ifs) return; // file doesn't exist yet
+
         string line;
         while (getline(ifs, line)) {
-            if (line.empty()) continue;
-            size_t p1 = line.find(',');
-            size_t p2 = line.find(',', p1 + 1);
+            try {
+                if (line.empty()) continue;
+                size_t p1 = line.find(',');
+                size_t p2 = line.find(',', p1 + 1);
 
-            if (p1 == string::npos || p2 == string::npos) continue; // skip malformed lines
+                if (p1 == string::npos || p2 == string::npos)
+                        throw runtime_error("Malformed line");  // skip malformed lines
 
-            string name = line.substr(0, p1);
-            int qty = stoi(line.substr(p1 + 1, p2 - p1 - 1));
-            string expiry = line.substr(p2 + 1);
+                string name = line.substr(0, p1);
+                int qty = stoi(line.substr(p1 + 1, p2 - p1 - 1));
+                string expiry = line.substr(p2 + 1);
 
-            items.push_back(PantryItem(name, qty, expiry));
+                items.push_back(PantryItem(name, qty, expiry));
+            }
+            catch (...) {
+                cout << "Warning: Skipping corrupted entry in file.\n";
+            }
         }
     }
 };

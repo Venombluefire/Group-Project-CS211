@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <stdexcept>
 using namespace std;
 
 // Represents a single pantry item with a name, quantity, and expiry date.
@@ -24,10 +25,22 @@ public:
     int getQuantity() const { return quantity; }
     string getExpiry() const { return expiry; }
 
-    // --- Setters ---
-    void setName(const string& n) { name = n; }
-    void setQuantity(int q) { quantity = q; }
-    void setExpiry(const string& e) { expiry = e; }
+    // --- Setters with exceptions ---
+    void setName(const string& n) {
+        if (n.empty())
+            throw invalid_argument("Item name cannot be empty.");
+        name = n;
+    }
+    void setQuantity(int q) {
+        if (q < 0)
+            throw invalid_argument("Quantity cannot be negative.");
+        quantity = q;
+    }
+    void setExpiry(const string& e) {
+        if (e.empty())
+            throw invalid_argument("Expiry date cannot be empty.");
+        expiry = e;
+    }
 
     // Display item details in a readable format
     void display() const {
